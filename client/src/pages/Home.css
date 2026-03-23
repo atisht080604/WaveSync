@@ -1,0 +1,167 @@
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  padding: 32px;
+}
+
+/* Base tailwind-like utilities since we aren't using full Tailwind */
+.mt-auto { margin-top: auto; }
+.w-full { width: 100%; }
+
+/* Background SVG Waves */
+.waveform-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.waveform-bg svg {
+  width: 100%;
+  height: 100%;
+}
+
+.wave {
+  fill: none;
+  stroke: var(--accent-primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: wave-dash 20s linear infinite;
+}
+
+.wave-2 { animation-duration: 25s; opacity: 0.6; }
+.wave-3 { animation-duration: 30s; opacity: 0.3; }
+
+@keyframes wave-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Foreground Content */
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 64px;
+}
+
+.hero-header {
+  text-align: center;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #FFF, var(--accent-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tagline {
+  font-size: 18px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Cards Area */
+.action-cards {
+  display: flex;
+  gap: 24px;
+  width: 100%;
+  justify-content: center;
+}
+
+.action-card {
+  flex: 1;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  min-height: 280px;
+}
+
+.action-card h2 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin: 0;
+}
+
+.card-desc {
+  color: var(--text-secondary);
+  margin-bottom: auto; /* Pushes button to bottom */
+}
+
+.card-icon-wrapper {
+  background: var(--bg-base);
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+}
+
+.card-icon {
+  color: var(--accent-primary);
+}
+
+.join-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin-top: auto;
+}
+
+.room-input {
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  letter-spacing: 2px;
+}
+
+/* Footer */
+.home-footer {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.home-footer p {
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .action-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+  .action-card {
+    width: 100%;
+  }
+  .logo-text {
+    font-size: 40px;
+  }
+}
