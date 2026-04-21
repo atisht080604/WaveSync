@@ -217,50 +217,58 @@ export function Room() {
   };
 
   const handleFileUpload = async (e, mode = 'play') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
     if (isHost) {
       const origTrackName = trackName;
-      setTrackName('Uploading...');
+      setTrackName(files.length > 1 ? 'Uploading multiple...' : 'Uploading...');
       
-      const formData = new FormData();
-      formData.append('audio', file);
+      let serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
+      serverUrl = serverUrl.replace(/^ws:\/\//i, 'http://').replace(/^wss:\/\//i, 'https://');
       
       try {
-        let serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
-        serverUrl = serverUrl.replace(/^ws:\/\//i, 'http://').replace(/^wss:\/\//i, 'https://');
-        
-        const res = await fetch(`${serverUrl}/upload`, {
-          method: 'POST',
-          body: formData
-        });
-        
-        if (!res.ok) throw new Error('Upload failed');
-        
-        const data = await res.json();
-        
-        const finalUrl = data.url.startsWith('http') ? data.url : `${serverUrl}${data.url}`;
-        const trackTitle = file.name.replace(/\.[^/.]+$/, "");
-        
-        if (mode === 'play') {
-          socket.emit('new-track', {
-            name: trackTitle,
-            artist: 'Local Upload',
-            url: finalUrl
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const formData = new FormData();
+          formData.append('audio', file);
+          
+          const res = await fetch(`${serverUrl}/upload`, {
+            method: 'POST',
+            body: formData
           });
-        } else {
-          socket.emit('add-to-playlist', {
-            name: trackTitle,
-            artist: 'Local Upload',
-            url: finalUrl
-          });
-          setTrackName(origTrackName);
+          
+          if (!res.ok) throw new Error(`Upload failed for ${file.name}`);
+          
+          const data = await res.json();
+          
+          const finalUrl = data.url.startsWith('http') ? data.url : `${serverUrl}${data.url}`;
+          const trackTitle = file.name.replace(/\.[^/.]+$/, "");
+          
+          if (mode === 'play' && i === 0) {
+            // First track overrides if mode is play
+            socket.emit('new-track', {
+              name: trackTitle,
+              artist: 'Local Upload',
+              url: finalUrl
+            });
+          } else {
+            // Successive tracks or 'queue' mode go directly into the playlist
+            socket.emit('add-to-playlist', {
+              name: trackTitle,
+              artist: 'Local Upload',
+              url: finalUrl
+            });
+            // Restore track name if we didn't just override it
+            if (mode !== 'play' || i > 0) {
+              setTrackName(origTrackName);
+            }
+          }
         }
         
         setUploadModalOpen(false);
       } catch (err) {
-        console.error('Failed to upload file:', err);
+        console.error('Failed to upload file(s):', err);
         setTrackName('Upload Failed');
         setTimeout(() => setTrackName(origTrackName), 2000);
       }
@@ -422,7 +430,15 @@ export function Room() {
         <div className="queue-container mt-6 flex-1 max-h-[200px] flex flex-col mb-4">
           <div className="flex justify-between items-center mb-4 flex-shrink-0">
             <h3 className="font-display text-lg">Up Next</h3>
-            <Badge>{playlist.length} track{playlist.length !== 1 ? 's' : ''}</Badge>
+            <div className="flex gap-2 items-center">
+              {isHost && (
+                <label className="browse-btn queue-add-btn text-xs px-2 py-1 cursor-pointer flex items-center gap-1 bg-[#252528] text-[var(--accent-primary)] hover:bg-[#333336] rounded transition-colors whitespace-nowrap">
+                  <Plus size={14} /> Add Tracks
+                  <input type="file" accept="audio/*" multiple className="file-input-hidden hidden" onChange={(e) => handleFileUpload(e, 'queue')} />
+                </label>
+              )}
+              <Badge>{playlist.length} track{playlist.length !== 1 ? 's' : ''}</Badge>
+            </div>
           </div>
           <div className="queue-list flex flex-col gap-2 overflow-y-auto pr-1">
             {playlist.length === 0 ? (
@@ -520,11 +536,11 @@ export function Room() {
                 <div className="flex gap-3 justify-center mt-4">
                   <label className="browse-btn text-xs px-5 py-2 cursor-pointer flex items-center gap-2 bg-[var(--accent-primary)] text-[var(--bg-base)]">
                     <Play size={14} fill="currentColor" /> Browse
-                    <input type="file" accept="audio/*" className="file-input-hidden" onChange={(e) => handleFileUpload(e, 'play')} />
+                    <input type="file" accept="audio/*" multiple className="file-input-hidden" onChange={(e) => handleFileUpload(e, 'play')} />
                   </label>
                   <label className="browse-btn text-xs px-5 py-2 cursor-pointer flex items-center gap-2 bg-[var(--bg-elevated)] text-white hover:bg-[var(--bg-surface)]">
                     <Plus size={16} /> Add to Queue
-                    <input type="file" accept="audio/*" className="file-input-hidden" onChange={(e) => handleFileUpload(e, 'queue')} />
+                    <input type="file" accept="audio/*" multiple className="file-input-hidden" onChange={(e) => handleFileUpload(e, 'queue')} />
                   </label>
                 </div>
               </div>
