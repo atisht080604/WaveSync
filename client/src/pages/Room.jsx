@@ -430,15 +430,7 @@ export function Room() {
         <div className="queue-container mt-6 flex-1 max-h-[200px] flex flex-col mb-4">
           <div className="flex justify-between items-center mb-4 flex-shrink-0">
             <h3 className="font-display text-lg">Up Next</h3>
-            <div className="flex gap-2 items-center">
-              {isHost && (
-                <label className="browse-btn queue-add-btn text-xs px-2 py-1 cursor-pointer flex items-center gap-1 bg-[#252528] text-[var(--accent-primary)] hover:bg-[#333336] rounded transition-colors whitespace-nowrap">
-                  <Plus size={14} /> Add Tracks
-                  <input type="file" accept="audio/*" multiple className="file-input-hidden hidden" onChange={(e) => handleFileUpload(e, 'queue')} />
-                </label>
-              )}
-              <Badge>{playlist.length} track{playlist.length !== 1 ? 's' : ''}</Badge>
-            </div>
+            <Badge>{playlist.length} track{playlist.length !== 1 ? 's' : ''}</Badge>
           </div>
           <div className="queue-list flex flex-col gap-2 overflow-y-auto pr-1">
             {playlist.length === 0 ? (
@@ -451,9 +443,25 @@ export function Room() {
                     <p className="text-xs truncate" style={{color: 'var(--text-secondary)'}}>{track.artist}</p>
                   </div>
                   {isHost && (
-                    <button className="text-[var(--text-secondary)] hover:text-[#ff4e4e] transition-colors flex-shrink-0 p-1 rounded-full hover:bg-[rgba(255,78,78,0.1)]" style={{color: 'var(--text-secondary)'}} onClick={() => socket.emit('remove-from-playlist', i)}>
-                      <X size={16} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button 
+                        className="text-[var(--text-secondary)] hover:text-white transition-colors flex-shrink-0 p-1 rounded-full hover:bg-[rgba(255,255,255,0.1)]" 
+                        title="Play Now"
+                        onClick={() => {
+                          socket.emit('new-track', track);
+                          socket.emit('remove-from-playlist', i);
+                        }}
+                      >
+                        <Play size={16} fill="currentColor" />
+                      </button>
+                      <button 
+                        className="text-[var(--text-secondary)] hover:text-[#ff4e4e] transition-colors flex-shrink-0 p-1 rounded-full hover:bg-[rgba(255,78,78,0.1)]" 
+                        title="Remove from Queue"
+                        onClick={() => socket.emit('remove-from-playlist', i)}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   )}
                 </div>
               ))
