@@ -216,13 +216,13 @@ export function Room() {
     navigate('/');
   };
 
-  const handleFileUpload = async (e, mode = 'play') => {
+  const handleFileUpload = async (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     if (isHost) {
       const origTrackName = trackName;
-      setTrackName(files.length > 1 ? 'Uploading multiple...' : 'Uploading...');
+      setTrackName(files.length > 1 ? `Uploading ${files.length} tracks...` : 'Uploading...');
       
       let serverUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
       serverUrl = serverUrl.replace(/^ws:\/\//i, 'http://').replace(/^wss:\/\//i, 'https://');
@@ -245,27 +245,15 @@ export function Room() {
           const finalUrl = data.url.startsWith('http') ? data.url : `${serverUrl}${data.url}`;
           const trackTitle = file.name.replace(/\.[^/.]+$/, "");
           
-          if (mode === 'play' && i === 0) {
-            // First track overrides if mode is play
-            socket.emit('new-track', {
-              name: trackTitle,
-              artist: 'Local Upload',
-              url: finalUrl
-            });
-          } else {
-            // Successive tracks or 'queue' mode go directly into the playlist
-            socket.emit('add-to-playlist', {
-              name: trackTitle,
-              artist: 'Local Upload',
-              url: finalUrl
-            });
-            // Restore track name if we didn't just override it
-            if (mode !== 'play' || i > 0) {
-              setTrackName(origTrackName);
-            }
-          }
+          // Always add to playlist instead of overriding
+          socket.emit('add-to-playlist', {
+            name: trackTitle,
+            artist: 'Local Upload',
+            url: finalUrl
+          });
         }
         
+        setTrackName(origTrackName);
         setUploadModalOpen(false);
       } catch (err) {
         console.error('Failed to upload file(s):', err);
@@ -542,13 +530,9 @@ export function Room() {
               <div className="upload-zone py-6">
                 <UploadCloud size={32} className="text-[var(--text-secondary)] mb-3 opacity-50" />
                 <div className="flex gap-3 justify-center mt-4">
-                  <label className="browse-btn text-xs px-5 py-2 cursor-pointer flex items-center gap-2 bg-[var(--accent-primary)] text-[var(--bg-base)]">
-                    <Play size={14} fill="currentColor" /> Browse
-                    <input type="file" accept="audio/*" multiple className="file-input-hidden" onChange={(e) => handleFileUpload(e, 'play')} />
-                  </label>
-                  <label className="browse-btn text-xs px-5 py-2 cursor-pointer flex items-center gap-2 bg-[var(--bg-elevated)] text-white hover:bg-[var(--bg-surface)]">
-                    <Plus size={16} /> Add to Queue
-                    <input type="file" accept="audio/*" multiple className="file-input-hidden" onChange={(e) => handleFileUpload(e, 'queue')} />
+                  <label className="browse-btn text-sm px-6 py-2 cursor-pointer flex items-center gap-2 bg-[var(--bg-elevated)] hover:bg-[var(--bg-surface)] text-white border border-[var(--border-subtle)] rounded-lg transition-colors">
+                    <Plus size={16} /> Add Tracks to Queue
+                    <input type="file" accept="audio/*" multiple className="file-input-hidden hidden" onChange={handleFileUpload} />
                   </label>
                 </div>
               </div>

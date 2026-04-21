@@ -130,7 +130,7 @@ io.on('connection', (socket) => {
     if (!room || room.hostId !== socket.id) return;
 
     room.currentTrack = trackMetadata;
-    room.playing = true;
+    room.playing = false;
     room.currentTime = 0;
     room.lastUpdate = Date.now();
     
@@ -153,15 +153,38 @@ io.on('connection', (socket) => {
     const room = rooms.get(socket.roomId);
     if (!room || room.hostId !== socket.id) return;
     
-    room.playlist.push(trackMetadata);
-    
-    io.to(socket.roomId).emit('room-state', {
-      users: room.users,
-      hostId: room.hostId,
-      track: room.currentTrack,
-      playlist: room.playlist,
-      playing: room.playing
-    });
+    if (room.currentTrack === null) {
+      // If nothing is playing right now, immediately start this track
+      room.currentTrack = trackMetadata;
+      room.playing = false;
+      room.currentTime = 0;
+      room.lastUpdate = Date.now();
+      
+      io.to(socket.roomId).emit('room-state', {
+        users: room.users,
+        hostId: room.hostId,
+        track: room.currentTrack,
+        playlist: room.playlist,
+        playing: true
+      });
+
+      io.to(socket.roomId).emit('sync', {
+        serverTime: Date.now(),
+        targetTime: 0,
+        targetPlaying: true
+      });
+    } else {
+      // Otherwise, add it to the Up Next queue
+      room.playlist.push(trackMetadata);
+      
+      io.to(socket.roomId).emit('room-state', {
+        users: room.users,
+        hostId: room.hostId,
+        track: room.currentTrack,
+        playlist: room.playlist,
+        playing: room.playing
+      });
+    }
   });
 
   socket.on('next-track', () => {
