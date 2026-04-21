@@ -130,15 +130,22 @@ io.on('connection', (socket) => {
     if (!room || room.hostId !== socket.id) return;
 
     room.currentTrack = trackMetadata;
-    room.playing = false;
+    room.playing = true;
     room.currentTime = 0;
+    room.lastUpdate = Date.now();
     
     io.to(socket.roomId).emit('room-state', {
       users: room.users,
       hostId: room.hostId,
       track: room.currentTrack,
       playlist: room.playlist,
-      playing: false
+      playing: true
+    });
+
+    io.to(socket.roomId).emit('sync', {
+      serverTime: Date.now(),
+      targetTime: 0,
+      targetPlaying: true
     });
   });
 
