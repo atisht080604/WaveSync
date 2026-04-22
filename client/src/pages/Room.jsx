@@ -40,12 +40,13 @@ export function Room() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [trackName, setTrackName] = useState('Waiting for host...');
   const [artistName, setArtistName] = useState('—');
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
   const [syncStatus, setSyncStatus] = useState('connected');
 
   const audioRef = useRef(null);
   const progressRef = useRef(null);
+  const progressFillRef = useRef(null);
+  const currentTimeRef = useRef(null);
+  const durationRef = useRef(null);
 
   const [ping, setPing] = useState(0);
 
@@ -163,9 +164,21 @@ export function Room() {
 
     let animationFrame;
     const updateProgress = () => {
-      if (audioRef.current) {
-        setCurrentTime(audioRef.current.currentTime);
-        setDuration(audioRef.current.duration || 0);
+      if (audioRef.current && progressFillRef.current && currentTimeRef.current && durationRef.current) {
+        const ct = audioRef.current.currentTime || 0;
+        const dur = audioRef.current.duration || 0;
+        
+        progressFillRef.current.style.width = `${dur ? (ct / dur) * 100 : 0}%`;
+        
+        const formatTimeStr = (seconds) => {
+          if (!seconds || isNaN(seconds)) return '0:00';
+          const m = Math.floor(seconds / 60);
+          const s = Math.floor(seconds % 60);
+          return `${m}:${s.toString().padStart(2, '0')}`;
+        };
+
+        currentTimeRef.current.textContent = formatTimeStr(ct);
+        durationRef.current.textContent = formatTimeStr(dur);
       }
       animationFrame = requestAnimationFrame(updateProgress);
     };
@@ -199,10 +212,12 @@ export function Room() {
   };
 
   const handleSeek = (e) => {
-    if (!isHost || !progressRef.current || !duration) return;
+    if (!isHost || !progressRef.current) return;
+    const dur = audioRef.current?.duration || 0;
+    if (!dur) return;
     const rect = progressRef.current.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
-    const newTime = percent * duration;
+    const newTime = percent * dur;
     socket.emit('seek', { time: newTime });
   };
 
@@ -313,8 +328,8 @@ export function Room() {
 
         <div className="progress-system">
           <div className="time-labels">
-            <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+            <span ref={currentTimeRef}>0:00</span>
+            <span ref={durationRef}>0:00</span>
           </div>
           <div 
             className="progress-track" 
@@ -324,7 +339,8 @@ export function Room() {
           >
             <div 
               className="progress-fill" 
-              style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+              ref={progressFillRef}
+              style={{ width: '0%' }}
             >
               <div className="progress-thumb" />
             </div>
@@ -437,7 +453,6 @@ export function Room() {
                         title="Play Now"
                         onClick={() => {
                           socket.emit('new-track', track);
-                          socket.emit('remove-from-playlist', i);
                         }}
                       >
                         <Play size={16} fill="currentColor" />
