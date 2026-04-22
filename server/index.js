@@ -194,7 +194,7 @@ io.on('connection', (socket) => {
     if (room.playlist.length > 0) {
       room.currentTrack = room.playlist.shift();
       room.currentTime = 0;
-      room.playing = true;
+      room.playing = false;
       room.lastUpdate = Date.now();
       
       io.to(socket.roomId).emit('room-state', {
