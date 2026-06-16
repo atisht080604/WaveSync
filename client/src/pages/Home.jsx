@@ -7,10 +7,6 @@ import { Input } from '../components/Input';
 
 import './Home.css';
 
-// Socket singleton for basic creation validation
-// In a full app, we'd probably manage this in a context
-const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3001';
-
 export function Home() {
   const navigate = useNavigate();
   const [roomIdInput, setRoomIdInput] = useState('');
@@ -34,6 +30,10 @@ export function Home() {
 
   return (
     <div className="home-container">
+      {/* Ambient Radial Glows */}
+      <div className="ambient-glow-1" />
+      <div className="ambient-glow-2" />
+
       {/* Decorative Waveform Background */}
       <div className="waveform-bg">
         <svg viewBox="0 0 1000 200" preserveAspectRatio="none">
@@ -44,38 +44,38 @@ export function Home() {
       </div>
 
       <div className="hero-content">
-        <div className="hero-header">
+        <header className="hero-header animate-fade-in">
           <h1 className="logo-text">WaveSync</h1>
           <p className="tagline">One room. Every device. Perfect sound.</p>
-        </div>
+        </header>
 
-        <div className="action-cards">
+        <div className="action-cards animate-slide-up">
           {/* Create Room Card */}
           <Card className="action-card">
             <div className="card-icon-wrapper">
-              <RadioReceiver className="card-icon" size={32} />
+              <RadioReceiver className="card-icon" size={28} />
             </div>
-            <h2>Start a Session</h2>
-            <p className="card-desc">Generate a room ID and invite others</p>
+            <h2>Start Session</h2>
+            <p className="card-desc">Instantly host a synchronization room and share with friends.</p>
             <Button 
               variant="primary" 
               className="mt-auto w-full"
               onClick={handleCreateRoom}
               disabled={isCreating}
             >
-              {isCreating ? 'Creating...' : 'Create Room →'}
+              {isCreating ? 'Creating Room...' : 'Create Room'}
             </Button>
           </Card>
 
           {/* Join Room Card */}
           <Card className="action-card">
             <div className="card-icon-wrapper">
-              <Headphones className="card-icon" size={32} />
+              <Headphones className="card-icon" size={28} />
             </div>
-            <h2>Join a Session</h2>
+            <h2>Join Room</h2>
             <form onSubmit={handleJoinRoom} className="join-form">
               <Input 
-                placeholder="Enter Room ID…" 
+                placeholder="ENTER ROOM ID" 
                 value={roomIdInput}
                 onChange={(e) => setRoomIdInput(e.target.value.toUpperCase())}
                 maxLength={8}
@@ -87,14 +87,15 @@ export function Home() {
                 disabled={!roomIdInput.trim() || isJoining}
                 className="w-full"
               >
-                {isJoining ? 'Joining...' : 'Join Room →'}
+                {isJoining ? 'Joining Room...' : 'Join Room'}
               </Button>
             </form>
           </Card>
         </div>
 
         <footer className="home-footer">
-          <p>Synchronize up to 50 devices with sub-10ms latency</p>
+          <p className="tech-badge">LOW LATENCY BEAT SYNC</p>
+          <p className="footer-subtext">Synchronize infinite devices with sub-10ms latency drift correction</p>
         </footer>
       </div>
     </div>
